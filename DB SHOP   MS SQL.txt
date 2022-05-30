@@ -1,0 +1,50 @@
+CREATE TABLE Specs (
+  ID INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+  Name VARCHAR(45) ,
+  Value VARCHAR(45) ,
+  );
+
+
+
+CREATE TABLE Device (
+  ID INT IDENTITY(1,1) NOT NULL,
+  Name VARCHAR(45) ,
+  Type VARCHAR(45) ,
+  PRIMARY KEY (ID),
+  ParentDeviceID INT FOREIGN KEY REFERENCES Device(ID),
+  SpecID INT FOREIGN KEY REFERENCES Specs(ID),
+  );
+  
+--Query 1
+Select distinct machine.name , sensor.name 
+From device sensor join device machine 
+on machine . Id =sensor . ParentDeviceId;
+  
+--Query 2  
+  Select D.Name As DeviceName , 
+       S.Name As SpecsName , 
+       Value
+From Device As D
+join Specs As S
+ON SpecID = S.ID;
+
+--Query 3
+SELECT D1.Name As SensorName,
+D2.name As MachineName
+From Device AS D1
+JOIN Device As D2
+ON D1.ParentDeviceID=D2.ID
+Group by D1.Name,D2.Name
+Having count(D1.Specid)=1
+
+
+--Query 4
+select ID AS IntersectedSpcsID from specs
+  intersect
+select SpecID from Device;
+
+
+--Query 5
+SELECT S.name,count(*) AS NumOfSensors FROM Device AS D JOIN Specs AS S ON SpecID = S.ID
+Where D.Type = 'Sensor'
+GROUP BY S.name;

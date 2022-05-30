@@ -1,0 +1,118 @@
+CREATE TABLE SPECS 
+(
+  ID INT NOT NULL 
+, NAME VARCHAR2(20) 
+, VALUE INT 
+, CONSTRAINT SPECS_PK PRIMARY KEY 
+  (
+    ID 
+  )
+  ENABLE 
+);
+
+CREATE SEQUENCE SPECS_SEQ;
+
+CREATE TRIGGER SPECS_TRG 
+BEFORE INSERT ON SPECS 
+FOR EACH ROW 
+BEGIN
+  <<COLUMN_SEQUENCES>>
+  BEGIN
+    IF INSERTING AND :NEW.ID IS NULL THEN
+      SELECT SPECS_SEQ.NEXTVAL INTO :NEW.ID FROM SYS.DUAL;
+    END IF;
+  END COLUMN_SEQUENCES;
+END;
+/
+
+
+CREATE TABLE DEVICE 
+(
+  ID INT NOT NULL 
+, NAME VARCHAR2(20) 
+, TYPE VARCHAR2(20) 
+, PARENTDEVICEID INT 
+, SPECID INT 
+, CONSTRAINT DEVICE_PK PRIMARY KEY 
+  (
+    ID 
+  )
+  ENABLE 
+);
+
+ALTER TABLE DEVICE
+ADD CONSTRAINT PARENTDEVICEID FOREIGN KEY
+(
+  PARENTDEVICEID 
+)
+REFERENCES DEVICE
+(
+  ID 
+)
+ENABLE;
+
+ALTER TABLE DEVICE
+ADD CONSTRAINT SPECID FOREIGN KEY
+(
+	SPECID
+)
+REFERENCES SPECS
+(
+  ID 
+)
+ENABLE;
+
+CREATE SEQUENCE DEVICE_SEQ;
+
+CREATE TRIGGER DEVICE_TRG 
+BEFORE INSERT ON DEVICE 
+FOR EACH ROW 
+BEGIN
+  <<COLUMN_SEQUENCES>>
+  BEGIN
+    IF INSERTING AND :NEW.ID IS NULL THEN
+      SELECT DEVICE_SEQ.NEXTVAL INTO :NEW.ID FROM SYS.DUAL;
+    END IF;
+  END COLUMN_SEQUENCES;
+END;
+/
+
+--QUERY 1
+
+Select distinct machine.name , sensor.name 
+From device sensor join device machine 
+on machine . Id =sensor . ParentDeviceId;
+
+--QUERY 2
+
+  Select D.Name As DeviceName , 
+       S.Name As SpecsName , 
+       Value
+From Device D
+join Specs S
+ON SpecID = S.ID;
+
+--QUERY 3
+
+SELECT D1.Name As SensorName,
+D2.name As MachineName
+From Device D1
+JOIN Device D2
+ON D1.ParentDeviceID=D2.ID
+Group by D1.Name,D2.Name
+Having count(D1.Specid)=1;
+
+--QUERY 4
+
+select ID AS IntersectedSpcsID from specs
+  intersect
+select SpecID from Device;
+
+
+--QUERY 5
+
+SELECT S.name,count(*) AS NumOfSensors FROM Device D JOIN Specs S ON SpecID = S.ID
+Where D.Type = 'Sensor'
+GROUP BY S.name;
+
+
